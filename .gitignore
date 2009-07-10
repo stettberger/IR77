@@ -1,11 +1,9 @@
 .*.swp
-config.mk
 *~
 *.E
 *.o
 *.dep
 autoconf.h
-.config*
 .menuconfig.log
 .menuconfig.old
 control6/control6.c
