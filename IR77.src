@@ -89,11 +89,51 @@ dnl // die ecmd syntax ist "c6 get Wassersoll" oder "c6 set Wassersoll 255"
 dnl // die werte koennen von 0 bis 255 gehen.
    uint16_t rc5 = RC5_GET();
    DDR_CONFIG_OUT(CHANNEL1);
+   DDR_CONFIG_OUT(CHANNEL2);
+   DDR_CONFIG_OUT(CHANNEL3);
+   DDR_CONFIG_OUT(CHANNEL4);
+   DDR_CONFIG_OUT(CHANNEL5);
+   DDR_CONFIG_OUT(CHANNEL6);
+   DDR_CONFIG_OUT(CHANNEL7);
    DDR_CONFIG_OUT(CHANNEL8);
+   
 
-   ON rc5 == 0x0535 DO
-     PIN_TOGGLE(CHANNEL1);
-   END
+   define(REWIND,  0x0532)
+   define(PLAY,    0x0535)
+   define(FORWARD, 0x0534)
+   define(PAUSE,   0x0529)
+   define(STOP,    0x0536)
+   define(RECORD,  0x0537)
+ 
+   /* Channels */
+   define(POWER_ON,  0x053a)
+   define(POWER_OFF, 0x050e)
+   define(IR1, 0x0501)
+   define(IR2, 0x0502)
+   define(IR3, 0x0503)
+   define(IR4, 0x0504)
+   define(IR5, 0x0505)
+   define(IR6, 0x0506)
+   define(IR7, 0x0507)
+   define(IR8, 0x0508)
+   
+   static uint16_t last_press = 0;
+
+   define(`PROCESS_CHANNEL', `dnl
+  ON rc5 == POWER_ON  && last_press == IR$1 DO PIN_SET(`CHANNEL$1'); END
+  ON rc5 == POWER_OFF && last_press == IR$1 DO PIN_CLEAR(`CHANNEL$1'); END')
+  
+   PROCESS_CHANNEL(1);
+   PROCESS_CHANNEL(2);
+   PROCESS_CHANNEL(3);
+   PROCESS_CHANNEL(4);
+   PROCESS_CHANNEL(5);
+   PROCESS_CHANNEL(6);
+   PROCESS_CHANNEL(7);
+   PROCESS_CHANNEL(8);
+
+
+   ON rc5 != 0 DO last_press = rc5; END
 
 CONTROL_END
 
