@@ -1,0 +1,18 @@
+CAM-Ausgabe für AktuellesProjekt CAE25_B2.T3001
+Ausgabe am 10. Jul 2009, 11:47h
+AktuellesProjekt erzeugt mit TARGET 12.6.0.142 professional
+Ausgabe erzeugt mit PCBout V12.6.0.142
+
+Größe der Platine: 160,02 mm x 100,33 mm
+
+Folgend die Beschreibung der erzeugten Dateien:
+
+CAE25_B2.Top = 16 = Kupfer oben L2   ( *.Top )
+CAE25_B2.Tool = Bohrerliste
+CAE25_B2.Drill = Durchkontaktierte Bohrungen
+CAE25_B2.Outline = 23 = Platinen-Umriss   ( *.Outline )
+CAE25_B2.StopBot = 4 = Lötstoppmaske unten   ( *.StopBot )
+CAE25_B2.PosiTop = 21 = Bestückungsdruck oben   ( *.PosiTop )
+CAE25_B2.Apr = TARGET 3001! Blendenliste
+CAE25_B2.Whl = Eagle kompatible Blendenliste
+
