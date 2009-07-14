@@ -101,11 +101,12 @@ dnl // die werte koennen von 0 bis 255 gehen.
    uint16_t rc5 = RC5_GET();
    static uint16_t last_press = 0;
 
+   define(IR0, 0x0500);
    FOREACH((1, 2, 3, 4, 5, 6, 7, 8), `
      DDR_CONFIG_OUT(CHANNEL$1);
      define(IR$1, 0x050$1);
-     ON rc5 == POWER_ON  && last_press == IR$1 DO PIN_SET(`CHANNEL$1'); END
-     ON rc5 == POWER_OFF && last_press == IR$1 DO PIN_CLEAR(`CHANNEL$1'); END
+     ON rc5 == POWER_ON  && (last_press == IR$1 || last_press == IR0) DO PIN_SET(`CHANNEL$1'); END
+     ON rc5 == POWER_OFF && (last_press == IR$1 || last_press == IR0) DO PIN_CLEAR(`CHANNEL$1'); END
 ')
 
 
