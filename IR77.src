@@ -87,17 +87,6 @@ dnl   Wassersoll = 30;
 dnl END
 dnl // die ecmd syntax ist "c6 get Wassersoll" oder "c6 set Wassersoll 255"
 dnl // die werte koennen von 0 bis 255 gehen.
-   uint16_t rc5 = RC5_GET();
-   DDR_CONFIG_OUT(CHANNEL1);
-   DDR_CONFIG_OUT(CHANNEL2);
-   DDR_CONFIG_OUT(CHANNEL3);
-   DDR_CONFIG_OUT(CHANNEL4);
-   DDR_CONFIG_OUT(CHANNEL5);
-   DDR_CONFIG_OUT(CHANNEL6);
-   DDR_CONFIG_OUT(CHANNEL7);
-   DDR_CONFIG_OUT(CHANNEL8);
-   
-
    define(REWIND,  0x0532)
    define(PLAY,    0x0535)
    define(FORWARD, 0x0534)
@@ -109,6 +98,7 @@ dnl // die werte koennen von 0 bis 255 gehen.
    define(POWER_ON,  0x053a)
    define(POWER_OFF, 0x050e)
 
+   uint16_t rc5 = RC5_GET();
    static uint16_t last_press = 0;
 
    FOREACH((1, 2, 3, 4, 5, 6, 7, 8), `
