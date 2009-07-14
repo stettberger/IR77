@@ -68,6 +68,7 @@ dep_bool_menu "Enable (Serial-Line) Debugging" DEBUG y
   dep_bool 'FS20 WS300 Verbose' DEBUG_FS20_WS300_VERBOSE $DEBUG_FS20_WS300
   dep_bool 'HD44780' DEBUG_HD44780 $DEBUG
   dep_bool 'PWM' DEBUG_PWM $DEBUG
+  dep_bool 'PWM Servo' DEBUG_PWM_SERVO $DEBUG
   dep_bool 'MCUF' DEBUG_MCUF $DEBUG
   dep_bool 'I2C' DEBUG_I2C $DEBUG
   dep_bool 'IRC' DEBUG_IRC $DEBUG $IRC_SUPPORT
@@ -95,6 +96,7 @@ dep_bool_menu "Enable (Serial-Line) Debugging" DEBUG y
   dep_bool 'Cron' DEBUG_CRON $DEBUG
   dep_bool 'DCF77' DEBUG_DCF77 $DEBUG
   dep_bool 'Hooks' DEBUG_HOOK $DEBUG
+  dep_bool 'LDAP Auth' DEBUG_LDAP_AUTH $DEBUG
   bool 'Discard some of the received packets' DEBUG_DISCARD_SOME
 endmenu
 
@@ -263,6 +265,7 @@ source protocols/irc/config.in
 source protocols/twitter/config.in
 source protocols/netstat/config.in
 source services/upnp/config.in
+source protocols/ldap_auth/config.in
 
 endmenu
 
