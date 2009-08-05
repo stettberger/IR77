@@ -29,7 +29,6 @@
 #include "cron.h"
 
 #include "protocols/ecmd/ecmd-base.h"
-#include "protocols/ecmd/speed_parser.h"
 #include "protocols/ecmd/via_tcp/ecmd_state.h"
 
 
@@ -47,8 +46,12 @@ int16_t parse_cmd_cron_list (char *cmd, char *output, uint16_t len)
 		if (!jobll) return ECMD_FINAL_OK;
 		struct cron_event* job = &(jobll->event);
 		if (!job) return ECMD_FINAL_OK;
-		return ECMD_FINAL(snprintf_P(output, len, PSTR("Rep\thh:min\td.m\twod\n" "%i\t%i:%i\t%i.%i\t%i\n"), \
-			job->repeat, job->hour, job->minute, job->day, job->month, job->dayofweek));
+		if (job->cmd == CRON_JUMP)
+			return ECMD_FINAL(snprintf_P(output, len, PSTR("jump %i %i %i %i %i %i %p"), \
+			job->repeat, job->hour, job->minute, job->day, job->month, job->dayofweek, job->handler));
+		else if (job->cmd == CRON_ECMD)
+			return ECMD_FINAL(snprintf_P(output, len, PSTR("ecmd %i %i %i %i %i %i %s"), \
+			job->repeat, job->hour, job->minute, job->day, job->month, job->dayofweek, job->ecmddata));
 	}
 
 	// print out the amount of jobs
@@ -74,22 +77,18 @@ int16_t parse_cmd_cron_rm (char *cmd, char *output, uint16_t len)
 // Fields: Min Hour Day Month Dow ecmd
 int16_t parse_cmd_cron_add (char *cmd, char *output, uint16_t len)
 {
-        char* buffer = malloc(ECMD_INPUTBUF_LENGTH);
-        int8_t minute, hour, day, month, dayofweek;
-        char* ecmd = buffer +1; // reserve first byte for speed parser command
-        buffer[0] = ECMDS_EXECUTE_ECMD;
-        sscanf_P(cmd, PSTR("%i %i %i %i %i %s"), &minute,
-		&hour, &day, &month, &dayofweek, ecmd);
+	int8_t minute, hour, day, month, dayofweek;
+	char ecmd[ECMD_INPUTBUF_LENGTH];
+	sscanf_P(cmd, PSTR("%i %i %i %i %i %s"), &minute, &hour, &day, &month, &dayofweek, ecmd);
+	cron_jobinsert_ecmd(minute, hour, day, month, dayofweek, INFINIT_RUNNING, CRON_APPEND, ecmd);
 
-	cron_jobinsert(minute, hour, day, month, dayofweek, INFINIT_RUNNING, 
-		CRON_APPEND, strlen(buffer), buffer); // strlen correct?
-
-        return ECMD_FINAL(snprintf_P(output, len, PSTR("cron added")));
+	return ECMD_FINAL_OK;
 }
 
 
 /*
   -- Ethersex META --
+  block(Cron commands (dynamic variant))
   ecmd_feature(cron_list, "cron_list",, Show all cron entries)
   ecmd_feature(cron_rm, "cron_rm", POSITION, Remove one cron entry)
   ecmd_feature(cron_add, "cron_add", MIN HOUR DAY MONTH DOW ECMD, Add ECMD to cron to be executed at given time)

@@ -41,12 +41,13 @@ int16_t parse_cmd_date(char *cmd, char *output, uint16_t len)
   clock_current_localtime(&date);
 
   return ECMD_FINAL(snprintf_P(output, len, PSTR("%.2d:%.2d:%.2d %.2d.%.2d.%.2d %s"),
-                    date.hour, date.min, date.sec, date.day, date.month, date.year,
+                    date.hour, date.min, date.sec, date.day, date.month, date.year % 100,
                     weekdays + date.dow * 4));
 }
 
 /*
   -- Ethersex META --
+  block(Clock)
   ecmd_feature(time, "time",, Display the current time in seconds since January 1st 1970.)
   ecmd_feature(date, "date",, Display the current date.)
 */

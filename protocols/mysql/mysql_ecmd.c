@@ -20,8 +20,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
+#include "config.h"
 #include "mysql.h"
-#include "emcd_parser/ecmd.h"
 
 #include "protocols/ecmd/ecmd-base.h"
 
@@ -36,5 +36,6 @@ parse_cmd_mysql_query (char *cmd, char *output, uint16_t len)
 
 /*
   -- Ethersex META --
+  block(MySQL)
   ecmd_feature(mysql_query, "mysql query ",QUERY, Send specified MySQL query to the configured server)
 */

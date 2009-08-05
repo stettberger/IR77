@@ -66,9 +66,12 @@ divert(0)dnl
 #include "core/portio/user_config.h"
 #endif
 #include "protocols/ecmd/sender/ecmd_sender_net.h"
+#include "protocols/uip/uip_router.h"
+
 #include "protocols/uip/uip.h"
 #include "control6.h"
 
+divert(timer_divert)uint32_t timers[] = {
 divert(-1)dnl
 define(`C6_HEADER', `')
 

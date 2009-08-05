@@ -8,6 +8,7 @@ autoconf.h
 .menuconfig.old
 control6/control6.c
 control6/control6.h
+core/portio/config
 MCmenu
 MCradiolists
 ethersex
@@ -20,8 +21,8 @@ core/portio/user_config.c
 core/portio/user_config.h
 meta.c
 meta.m4
-contrib/stella/stella_test
-contrib/rfm12_ask/ecmd_speed/rfm12ask_send
+contrib/libecmd/interactive/interactive
+contrib/libecmd/rfm12ask_2272/rfm12ask_2272
 protocols/ecmd/ecmd_defs.c
 core/vfs/vfs-concat
 *.orig
@@ -34,3 +35,4 @@ protocols/mdns_sd/mdns_services.c
 services/watchcat/user_config.h
 protocols/uip/ipchair/ipchair.c
 protocols/ecmd/np_simple_glue.m4
+protocols/ecmd/wiki.txt
