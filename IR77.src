@@ -16,100 +16,54 @@ dnl   For more information on the GPL, please go to:
 dnl   http://www.gnu.org/copyleft/gpl.html
 dnl
 
-enum sensor { Kessel,Vorlauf,Wasser,WasserRuecklauf,WasserZulauf,AussenNord,Ruecklauf,Ofen };
+dnl enum State           { Stop,   Pause,  Play,   Record, Reward, Forward, StateLen};
+dnl uint16_t commands[] = {0x1420, 0x143C, 0x1430, 0x1431, 0x1435, 0x1436 };
 
-C6_HEADER(`/* This will be in control6.h */')
+enum State           { Stop,   Play,   Record, Reward, Forward, StateLen};
+uint16_t commands[] = {0x1420, 0x1430, 0x1431, 0x1435, 0x1436 };
+
+define(`CMD_Exit',  0x1409)
+define(`CMD_Mute',  0x141C)
+define(`CMD_Pause', 0x143C)
+
+uint8_t old_state = Stop, state = Stop;
+C6_HEADER(`#include <util/delay.h>')
 
 CONTROL_START
 
-dnl // dnl ist der kommentar fuer m4. Zum aktivieren der beispiele einfach das dnl entfernen.
+  uint16_t delay = 0;
 
-dnl  // dieses Beispiel zeigt anhand meiner Heizungssteuerung wie man zeitverzoegert die Wasserheizung
-dnl  // schaltet. Das geschieht bei einer Temperatur groesser als 55,0 Grad und nur zwischen 6 und 11 Uhr 
-dnl  THREAD(warmwasser_high)
-dnl      WAIT(60 * 15);
-dnl      PIN_SET(Warmwasser);
-dnl      THREAD_WAIT(warmwasser_high);
-dnl  THREAD_END(warmwasser_high)
-dnl  ON ONCE CLOCK_MIN && ( CLOCK_HOUR > 11 || CLOCK_HOUR < 6 ) && KTY_GET(Wasser) > 550 DO THREAD_START(warmwasser_high) END
+  uint8_t i;
+  uint16_t rc5 = RC5_GET();
+  for ( i = 0; i < StateLen; i++)
+    if (rc5 == commands[i])
+      state = commands[i];
 
-dnl  // das Beispiel zeigt wie man sofort (einmal in der Minute) auf auf die Wassertemperatur reagiert und schaltet
-dnl  // der Pinname "Warmwasser" stammt aus der Konfig vom named_pin
-dnl  ON ONCE CLOCK_MIN && CLOCK_HOUR > 6 && CLOCK_HOUR < 19 && KTY_GET(Wasser) < 400 DO
-dnl    PIN_CLEAR(Warmwasser);
-dnl  END
+  PIN_CLEAR(CHANNEL1);
+  PIN_CLEAR(CHANNEL3);
+  PIN_CLEAR(CHANNEL4);
+  PIN_CLEAR(CHANNEL5);
+  PIN_CLEAR(CHANNEL6);
 
-dnl  // ein Thread der in einer Endlosschleife mit 5 Sekunden Verzoegerung laeuft 
-dnl  // definiert eine globale Variable
-dnl  GLOBAL(lastzulauf, uint16_t);
-dnl  THREAD(zulauf)
-dnl    ON ADC_GET(WasserZulauf) < (lastzulauf - 1) DO
-dnl      //sendet ein ecmd an ein anderes ethersex
-dnl      UESEND(2001:6f8:1209:0:0:0:0:e6, "pumpe 0 1 0\n");
-dnl      WAIT(120);
-dnl      UESEND(2001:6f8:1209:0:0:0:0:e6, "pumpe 0 0 0\n");
-dnl      lastzulauf = ADC_GET(WasserZulauf);
-dnl    END
-dnl    ON ADC_GET(4) > lastzulauf DO
-dnl	lastzulauf = ADC_GET(WasserZulauf);
-dnl    END
-dnl    WAIT(5)
-dnl  THREAD_END(zulauf)
+  if (state == Stop      && old_state != state) { PIN_SET(CHANNEL1); delay = 50; }
+  if (state == Play      && old_state != state) { PIN_SET(CHANNEL3); delay = 50; }
+  if (state == Record    && old_state != state) { PIN_SET(CHANNEL4); _delay_ms(400); PIN_SET(CHANNEL3); delay = 50; }
+  if (state == Reward    && old_state != state) { PIN_SET(CHANNEL5); delay = 50; }
+  if (state == Forward   && old_state != state) { PIN_SET(CHANNEL6); delay = 50; }
 
-dnl  ON STARTUP DO
-dnl      THREAD_START(zulauf);
-dnl  END
-
-dnl  // schaltet morgens um 6 Uhr die Heizung ein wenn es draussen weniger als 3 Grad hat
-dnl  ON ONCE CLOCK_MIN == 0 && CLOCK_HOUR == 6 && KTY_GET(AussenNord) < 30 DO
-dnl    PIN_CLEAR(Heizung);
-dnl  END
-
-dnl  // reagiert sofort auf eine fallende Flanke am Eingangspin
-dnl  ON PIN_FALLING(Heizzirkulationspumpe) DO
-dnl    UESEND(2001:6f8:1209:0:0:0:0:e6, "pumpe 1 1 0\n");
-dnl  END
-dnl  ON PIN_RISING(Heizzirkulationspumpe) DO
-dnl    UESEND(2001:6f8:1209:0:0:0:0:e6, "pumpe 1 0 0\n");
-dnl  END
-dnl  // alle 10 Minuten wird geprueft ob der Pin low ist und ggf ein ecmd gesendet
-dnl  ON ONCE CLOCK_MIN % 10 == 0 DO
-dnl    ON PIN_LOW(Heizzirkulationspumpe) DO
-dnl      UESEND(2001:6f8:1209:0:0:0:0:e6, "pumpe 1 1 0\n");
-dnl    END
-dnl  END
-
-dnl // eine globale Variable fuer ecmd verwendet man so
-dnl ECMD_GLOBAL(Wassersoll, 20);
-dnl ECMD_GLOBAL(Raumsoll, 20);
-dnl ON Wassersoll > 30 DO
-dnl   Wassersoll = 30;
-dnl END
-dnl // die ecmd syntax ist "c6 get Wassersoll" oder "c6 set Wassersoll 255"
-dnl // die werte koennen von 0 bis 255 gehen.
-   define(REWIND,  0x0532)
-   define(PLAY,    0x0535)
-   define(FORWARD, 0x0534)
-   define(PAUSE,   0x0529)
-   define(STOP,    0x0536)
-   define(RECORD,  0x0537)
-
-   /* Channels */
-   define(POWER_ON,  0x053a)
-   define(POWER_OFF, 0x050e)
-
-   uint16_t rc5 = RC5_GET();
-   static uint16_t last_press = 0;
-
-   define(IR0, 0x0500);
-   FOREACH((1, 2, 3, 4, 5, 6, 7, 8), `
-     DDR_CONFIG_OUT(CHANNEL$1);
-     define(IR$1, 0x050$1);
-     ON rc5 == POWER_ON  && (last_press == IR$1 || last_press == IR0) DO PIN_SET(`CHANNEL$1'); END
-     ON rc5 == POWER_OFF && (last_press == IR$1 || last_press == IR0) DO PIN_CLEAR(`CHANNEL$1'); END
-')
+  if (rc5 == CMD_Exit)  { PIN_TOGGLE(CHANNEL7); delay = 50; }
+  if (rc5 == CMD_Mute)  { PIN_TOGGLE(CHANNEL8); delay = 50; }
+  if (rc5 == CMD_Pause) { PIN_TOGGLE(CHANNEL8); delay = 50; }
 
 
-   ON rc5 != 0 DO last_press = rc5; END
+  if (delay) {
+    while(delay--) {
+       wdt_kick();
+      _delay_ms(21);
+    }
+    while(RC5_GET()) {}; /* Clear the RC5 Buffer */
+  }
+
+  old_state = state;
 CONTROL_END
 
