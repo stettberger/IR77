@@ -1,6 +1,6 @@
-dnl   Copyright (c) 2008 by Jochen Roessner <jochen@lugrot.de>
+dnl   Copyright (c) 2009 by Christian Dietrich <stettberger@dokucode.de>
 dnl   This program is free software; you can redistribute it and/or modify
-dnl   it under the terms of the GNU General Public License version 2 or later
+dnl   it under the terms of the GNU General Public License version 3 or later
 dnl   as published by the Free Software Foundation.
 dnl  
 dnl   This program is distributed in the hope that it will be useful,
@@ -22,7 +22,7 @@ dnl uint16_t commands[] = {0x1420, 0x143C, 0x1430, 0x1431, 0x1435, 0x1436 };
 enum State            {Stop,   Play,   Record, Reward, Forward, StateLen};
 uint16_t commands[] = {0x1420, 0x1430, 0x1431, 0x1435, 0x1436 };
 dnl char *texts[]       = {"Stop", "Play", "Record", "Reward", "Forward"};
-dnl char *texts[]       = {"\xff", " \x2 ", "\x3", "\x4\x4", "\x2\x2"};
+dnl char *texts[]       = {"\xff", "\x2", "\x3", "\x4\x4", "\x2\x2"};
 char *texts[]       = {"Stop \xff", "Play \x2", "Record \x3", "Reward \x4\x4", "Forward \x2\x2"};
 
 uint8_t characters[][8] = {
@@ -36,29 +36,32 @@ define(`CMD_Exit',  0x1409)
 define(`CMD_Mute',  0x141C)
 define(`CMD_Pause', 0x143C)
 
-uint8_t old_state = Stop, state = Stop;
-uint8_t startup_timer;
+uint8_t old_state = 0xff, state = Stop;
 
 C6_HEADER(`#include <util/delay.h>')
 
 CONTROL_START
+   uint16_t delay = 0;
+
    ON STARTUP DO
      TTY_CLEAR();
      TTY_WRITE("-- Revox-IR77 --");
      TTY_CREATE_WINDOW(rc5, 1, 16, 1, 0);
      TTY_SELECT(rc5);
      TTY_WRITE("Code: 0686 \x01\x02\x03\xff"); 
-     startup_timer = 0x3;
      hd44780_define_char(1, characters[0]);
      hd44780_define_char(2, characters[1]);
      hd44780_define_char(3, characters[2]);
      hd44780_define_char(4, characters[3]);
+     uint8_t i;
+     for (i = 0; i < 100; i++) {
+	wdt_kick();
+       _delay_ms(21);
+     }
    END 
  
-  if (startup_timer) { startup_timer--; }
 
 
-  uint16_t delay = 0;
 
   uint8_t i;
   uint16_t rc5 = RC5_GET();
@@ -74,7 +77,8 @@ CONTROL_START
 
   if (state == Stop      && old_state != state) { PIN_SET(CHANNEL1); delay = 50; }
   if (state == Play      && old_state != state) { PIN_SET(CHANNEL3); delay = 50; }
-  if (state == Record    && old_state != state) { PIN_SET(CHANNEL4); _delay_ms(400); PIN_SET(CHANNEL3); delay = 50; }
+  if (state == Record    && old_state != state) { PIN_SET(CHANNEL4); _delay_ms(400);
+						  PIN_SET(CHANNEL3); delay = 50; }
   if (state == Reward    && old_state != state) { PIN_SET(CHANNEL5); delay = 50; }
   if (state == Forward   && old_state != state) { PIN_SET(CHANNEL6); delay = 50; }
 
@@ -83,22 +87,18 @@ CONTROL_START
   if (rc5 == CMD_Pause) { PIN_TOGGLE(CHANNEL2); delay = 50; }
 
 
-  if (delay && !startup_timer) {
+  if (delay) {
     TTY_SELECT(rc5);
     TTY_HOME();
     TTY_CLEAR();
     TTY_WRITE("%s%c", texts[state], PIN_HIGH(CHANNEL2) ? 1 : 0);
-  }
 
-  if (delay) {
     while(delay--) {
-       wdt_kick();
+      wdt_kick();
       _delay_ms(21);
     }
     while(RC5_GET()) {}; /* Clear the RC5 Buffer */
   }
-  
 
   old_state = state;
 CONTROL_END
-
