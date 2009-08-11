@@ -19,17 +19,44 @@ dnl
 dnl enum State           { Stop,   Pause,  Play,   Record, Reward, Forward, StateLen};
 dnl uint16_t commands[] = {0x1420, 0x143C, 0x1430, 0x1431, 0x1435, 0x1436 };
 
-enum State           { Stop,   Play,   Record, Reward, Forward, StateLen};
+enum State            {Stop,   Play,   Record, Reward, Forward, StateLen};
 uint16_t commands[] = {0x1420, 0x1430, 0x1431, 0x1435, 0x1436 };
+dnl char *texts[]       = {"Stop", "Play", "Record", "Reward", "Forward"};
+dnl char *texts[]       = {"\xff", " \x2 ", "\x3", "\x4\x4", "\x2\x2"};
+char *texts[]       = {"Stop \xff", "Play \x2", "Record \x3", "Reward \x4\x4", "Forward \x2\x2"};
+
+uint8_t characters[][8] = {
+	{0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b}, /* Pause */
+	{0x10, 0x18, 0x1c, 0x1e, 0x1f, 0x1e, 0x18, 0x10}, /* Play */
+	{0x04, 0x0e, 0x0e, 0x1f, 0x1f, 0x0e, 0x0e, 0x04}, /* Record */
+	{0x01, 0x03, 0x07, 0x0f, 0x1f, 0x0f, 0x03, 0x01}, /* Reward */
+};
 
 define(`CMD_Exit',  0x1409)
 define(`CMD_Mute',  0x141C)
 define(`CMD_Pause', 0x143C)
 
 uint8_t old_state = Stop, state = Stop;
+uint8_t startup_timer;
+
 C6_HEADER(`#include <util/delay.h>')
 
 CONTROL_START
+   ON STARTUP DO
+     TTY_CLEAR();
+     TTY_WRITE("-- Revox-IR77 --");
+     TTY_CREATE_WINDOW(rc5, 1, 16, 1, 0);
+     TTY_SELECT(rc5);
+     TTY_WRITE("Code: 0686 \x01\x02\x03\xff"); 
+     startup_timer = 0x3;
+     hd44780_define_char(1, characters[0]);
+     hd44780_define_char(2, characters[1]);
+     hd44780_define_char(3, characters[2]);
+     hd44780_define_char(4, characters[3]);
+   END 
+ 
+  if (startup_timer) { startup_timer--; }
+
 
   uint16_t delay = 0;
 
@@ -37,7 +64,7 @@ CONTROL_START
   uint16_t rc5 = RC5_GET();
   for ( i = 0; i < StateLen; i++)
     if (rc5 == commands[i])
-      state = commands[i];
+      state = i;
 
   PIN_CLEAR(CHANNEL1);
   PIN_CLEAR(CHANNEL3);
@@ -53,8 +80,15 @@ CONTROL_START
 
   if (rc5 == CMD_Exit)  { PIN_TOGGLE(CHANNEL7); delay = 50; }
   if (rc5 == CMD_Mute)  { PIN_TOGGLE(CHANNEL8); delay = 50; }
-  if (rc5 == CMD_Pause) { PIN_TOGGLE(CHANNEL8); delay = 50; }
+  if (rc5 == CMD_Pause) { PIN_TOGGLE(CHANNEL2); delay = 50; }
 
+
+  if (delay && !startup_timer) {
+    TTY_SELECT(rc5);
+    TTY_HOME();
+    TTY_CLEAR();
+    TTY_WRITE("%s%c", texts[state], PIN_HIGH(CHANNEL2) ? 1 : 0);
+  }
 
   if (delay) {
     while(delay--) {
@@ -63,6 +97,7 @@ CONTROL_START
     }
     while(RC5_GET()) {}; /* Clear the RC5 Buffer */
   }
+  
 
   old_state = state;
 CONTROL_END

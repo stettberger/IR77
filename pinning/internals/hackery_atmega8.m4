@@ -37,6 +37,7 @@
 #define HD44780_CTRL_PORT D
 #define HD44780_DATA_PORT D
 #define HD44780_RS PD0
+#define HD44780_RW PD2
 #define HD44780_EN PD1
 #define HD44780_D4 PD4
 #define HD44780_D5 PD5

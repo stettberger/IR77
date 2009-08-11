@@ -5,7 +5,7 @@ dnl Pin Configuration for 'aumeIR-B1'.  Edit it to fit your needs.
 dnl
 
 /* rc5 support */
-pin(RC5_SEND, PD4)
+pin(RC5_SEND, PB5)
 RC5_USE_INT(1)
 
 pin(CHANNEL1, PC5, OUTPUT)
