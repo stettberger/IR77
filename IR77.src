@@ -20,7 +20,8 @@ dnl enum State           { Stop,   Pause,  Play,   Record, Reward, Forward, Stat
 dnl uint16_t commands[] = {0x1420, 0x143C, 0x1430, 0x1431, 0x1435, 0x1436 };
 
 enum State            {Stop,   Play,   Record, Reward, Forward, StateLen};
-uint16_t commands[] = {0x1420, 0x1430, 0x1431, 0x1435, 0x1436 };
+dnl 0686 uint16_t commands[] = {0x1420, 0x1430, 0x1431, 0x1435, 0x1436 };
+uint16_t commands[] = {0x0536, 0x0535, 0x0537, 0x0532, 0x0534 };
 dnl char *texts[]       = {"Stop", "Play", "Record", "Reward", "Forward"};
 dnl char *texts[]       = {"\xff", "\x2", "\x3", "\x4\x4", "\x2\x2"};
 char *texts[]       = {"Stop \xff", "Play \x2", "Record \x3", "Reward \x4\x4", "Forward \x2\x2"};
@@ -32,9 +33,9 @@ uint8_t characters[][8] = {
 	{0x01, 0x03, 0x07, 0x0f, 0x1f, 0x0f, 0x03, 0x01}, /* Reward */
 };
 
-define(`CMD_Exit',  0x1409)
-define(`CMD_Mute',  0x141C)
-define(`CMD_Pause', 0x143C)
+define(`CMD_Exit',  0x0531)
+define(`CMD_Mute',  0x050D)
+define(`CMD_Pause', 0x0529)
 
 uint8_t old_state = 0xff, state = Stop;
 
@@ -48,7 +49,7 @@ CONTROL_START
      TTY_WRITE("-- Revox-IR77 --");
      TTY_CREATE_WINDOW(rc5, 1, 16, 1, 0);
      TTY_SELECT(rc5);
-     TTY_WRITE("Code: 0686 \x01\x02\x03\xff"); 
+     TTY_WRITE("Code: 0081 \x01\x02\x03\xff"); 
      hd44780_define_char(1, characters[0]);
      hd44780_define_char(2, characters[1]);
      hd44780_define_char(3, characters[2]);
